@@ -20,6 +20,54 @@ def expand_eyebrows(lmrks, eyebrows_expand_mod=1.0):
     return lmrks
 
 
+def get_region(landmarks: np.ndarray, mode: str):
+    if mode == 'glasses':
+        # Get eyes region according to 106 keypoints
+        left_eye_points = landmarks[33:43]
+        right_eye_points = landmarks[89:97]
+        x1_left = int(min(left_eye_points, key=lambda x: x[0])[0])
+        x2_left = int(max(left_eye_points, key=lambda x: x[0])[0])
+        y1_left = int(min(left_eye_points, key=lambda x: x[1])[1])
+        y2_left = int(max(left_eye_points, key=lambda x: x[1])[1])
+        x1_right = int(min(right_eye_points, key=lambda x: x[0])[0])
+        x2_right = int(max(right_eye_points, key=lambda x: x[0])[0])
+        y1_right = int(min(right_eye_points, key=lambda x: x[1])[1])
+        y2_right = int(max(right_eye_points, key=lambda x: x[1])[1])
+
+        # Get eyes region rectangle
+        eyes = np.concatenate((left_eye_points, right_eye_points), axis=0)
+        convexhull = cv2.convexHull(eyes)
+        x, y, w, h = cv2.boundingRect(convexhull)
+
+        # Get glasses region rectangle
+        center_x = x + w / 2
+        center_y = y + h / 2
+        scale_factor_x = 1.5
+        scale_factor_y = 5
+        new_x = int(center_x - (w * scale_factor_x) / 2)
+        new_y = int(center_y - (h * scale_factor_y) / 2)
+        new_w = int(w * scale_factor_x)
+        new_h = int(h * scale_factor_y)
+    
+    return new_x, new_y, new_w, new_h
+
+
+def get_mask_sticker(image: np.ndarray, landmarks: np.ndarray, mode: str) -> np.ndarray:
+    """
+    Get face mask for stickers
+    """
+
+    img_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    mask = np.zeros_like(img_gray)
+
+    if mode == 'glasses':
+        new_x, new_y, new_w, new_h = get_region(landmarks, mode)
+
+        cv2.rectangle(mask, (new_x, new_y), (new_x + new_w, new_y + new_h), 255, -1)
+    
+    return mask
+
+
 def get_mask(image: np.ndarray, landmarks: np.ndarray) -> np.ndarray:
     """
     Get face mask of image size using given landmarks of person
