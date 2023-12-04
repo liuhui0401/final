@@ -188,6 +188,47 @@ def resize_frames(crop_frames: List[np.ndarray], new_size=(256, 256)) -> Tuple[L
     return resized_frs, present
 
 
+def get_final_video_sticker(final_frames: List[np.ndarray],
+                    crop_frames: List[np.ndarray],
+                    full_frame: np.ndarray,
+                    tfm_arrays: List[np.ndarray],
+                    mode: str,
+                    handler) -> None:
+    """
+    Create final video from frames and add stickers
+    """
+    out = cv2.VideoWriter(f"{OUT_VIDEO_NAME}", cv2.VideoWriter_fourcc(*'mp4v'), fps, (full_frames[0].shape[1], full_frames[0].shape[0]))
+    size = (full_frames[0].shape[0], full_frames[0].shape[1])
+    result_frames = full_frames.copy()
+    
+    for i in tqdm(range(len(full_frames))):
+        if i == len(full_frames):
+            break
+        for j in range(len(crop_frames)):
+            try:
+                frame = cv2.resize(final_frames[i][0], (224, 224))
+                    
+                landmarks = handler.get_without_detection_without_transform(crop_frames[i][0])
+                mask = get_mask_sticker(crop_frames[i][0], landmarks, mode)
+                mat_rev = cv2.invertAffineTransform(tfm_arrays[i][0])
+
+                sticker_t = cv2.warpAffine(frame, mat_rev, (full_frame.shape[1], full_frame.shape[0]), borderMode=cv2.BORDER_REPLICATE)
+                mask_t = cv2.warpAffine(mask, mat_rev, (full_frame.shape[1], full_frame.shape[0]))
+                mask_t = np.expand_dims(mask_t, 2)
+
+                final = mask_t * sticker_t + (1-mask_t)*final
+                
+                result_frames[i] = final
+                torch.cuda.empty_cache()
+
+            except Exception as e:
+                pass
+                
+        out.write(result_frames[i])
+
+    out.release()
+
+
 def get_final_video(final_frames: List[np.ndarray],
                     crop_frames: List[np.ndarray],
                     full_frames: List[np.ndarray],
