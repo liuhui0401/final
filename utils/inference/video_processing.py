@@ -8,7 +8,7 @@ import traceback
 from insightface.utils import face_align
 from scipy.spatial import distance
 
-from .masks import face_mask_static
+from .masks import face_mask_static, get_mask_sticker
 from .image_processing import normalize_and_torch, normalize_and_torch_batch, crop_face
 
 import torch
