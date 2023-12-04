@@ -50,6 +50,7 @@ def normalize_and_torch_batch(frames: np.ndarray) -> torch.tensor:
 
 def add_sticker(crop_frames: List[np.ndarray],
                 source: np.ndarray,
+                mode: str,
                 handler):
     """
     Adding stickers to crop frames
