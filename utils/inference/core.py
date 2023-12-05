@@ -41,6 +41,7 @@ def model_inference_sticker(full_frames: List[np.ndarray],
     """
     Adding stickers to original images
     """
+    print('!!!!!!!!!')
     # Get Arcface embeddings of target image
     target_norm = normalize_and_torch_batch(np.array(target))
     target_embeds = netArc(F.interpolate(target_norm, scale_factor=0.5, mode='bilinear', align_corners=True))
@@ -55,7 +56,6 @@ def model_inference_sticker(full_frames: List[np.ndarray],
         resized_frs = np.array(resized_frs)
 
         # Add stickers to frames
-        print(source[0].shape)
         output_frames = add_sticker(resized_frs, source[0], 'glasses', handler)
 
         # create list of final frames with transformed faces
