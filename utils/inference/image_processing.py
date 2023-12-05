@@ -60,6 +60,7 @@ def add_sticker(crop_frames: List[np.ndarray],
         landmarks = handler.get_without_detection_without_transform(crop_frames[0][i])
         # Get special region according to 106 keypoints
         # Get masks for stickers
+        print(source.shape)
         source_gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
         _, source_mask = cv2.threshold(source_gray, 200, 255, cv2.THRESH_BINARY)
         source_mask = cv2.bitwise_not(source_mask)
