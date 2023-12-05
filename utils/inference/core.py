@@ -37,7 +37,7 @@ def model_inference_sticker(full_frames: List[np.ndarray],
                     crop_size=224,
                     BS=60,
                     half=True,
-                    handler):
+                    handler=None):
     """
     Adding stickers to original images
     """
@@ -55,7 +55,7 @@ def model_inference_sticker(full_frames: List[np.ndarray],
         resized_frs = np.array(resized_frs)
 
         # Add stickers to frames
-        output_frames = add_sticker(resized_frs, source[0], 'glasses' handler)
+        output_frames = add_sticker(resized_frs, source[0], 'glasses', handler)
 
         # create list of final frames with transformed faces
         final_frames = []
