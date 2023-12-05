@@ -16,6 +16,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 import torchvision.transforms as transforms
 import kornia
+import pdb
 
 
 def add_audio_from_another_video(video_with_sound: str, 
@@ -190,8 +191,10 @@ def resize_frames(crop_frames: List[np.ndarray], new_size=(256, 256)) -> Tuple[L
 
 def get_final_video_sticker(final_frames: List[np.ndarray],
                     crop_frames: List[np.ndarray],
-                    full_frame: np.ndarray,
-                    tfm_arrays: List[np.ndarray],
+                    full_frames: np.ndarray,
+                    tfm_array: List[np.ndarray],
+                    OUT_VIDEO_NAME: str,
+                    fps: float,
                     mode: str,
                     handler) -> None:
     """
@@ -201,27 +204,37 @@ def get_final_video_sticker(final_frames: List[np.ndarray],
     size = (full_frames[0].shape[0], full_frames[0].shape[1])
     result_frames = full_frames.copy()
     
+    print('start getting final video')
+    print(len(full_frames), len(crop_frames))
     for i in tqdm(range(len(full_frames))):
         if i == len(full_frames):
             break
-        for j in range(len(crop_frames)):
+        for j in range(len(crop_frames)): # length of target embedding
             try:
-                frame = cv2.resize(final_frames[i][0], (224, 224))
-                    
-                landmarks = handler.get_without_detection_without_transform(crop_frames[i][0])
-                mask = get_mask_sticker(crop_frames[i][0], landmarks, mode)
-                mat_rev = cv2.invertAffineTransform(tfm_arrays[i][0])
-
-                sticker_t = cv2.warpAffine(frame, mat_rev, (full_frame.shape[1], full_frame.shape[0]), borderMode=cv2.BORDER_REPLICATE)
-                mask_t = cv2.warpAffine(mask, mat_rev, (full_frame.shape[1], full_frame.shape[0]))
-                mask_t = np.expand_dims(mask_t, 2)
-
-                final = mask_t * sticker_t + (1-mask_t)*final
+                swap = cv2.resize(final_frames[j][i][:, :, :3], (224, 224))
+                cv2.imwrite('examples/images/vis2.png', swap)
                 
+                landmarks = handler.get_without_detection_without_transform(crop_frames[j][i])
+                mask = get_mask_sticker(crop_frames[j][i], landmarks, mode)
+                swap = torch.from_numpy(swap).cuda().permute(2,0,1).unsqueeze(0).type(torch.float32)
+                mask = torch.from_numpy(mask).cuda().unsqueeze(0).unsqueeze(0).type(torch.float32)
+                full_frame = torch.from_numpy(result_frames[i]).cuda().permute(2,0,1).unsqueeze(0)
+                mat = torch.from_numpy(tfm_array[j][i]).cuda().unsqueeze(0).type(torch.float32)
+
+                mat_rev = kornia.invert_affine_transform(mat)
+                swap_t = kornia.warp_affine(swap, mat_rev, size)
+                cv2.imwrite('examples/images/vis3.png', swap_t.squeeze().permute(1,2,0).cpu().detach().numpy())
+                mask_t = kornia.warp_affine(mask, mat_rev, size)
+                cv2.imwrite('examples/images/vis4.png', (mask_t*swap_t).squeeze().permute(1,2,0).cpu().detach().numpy())
+                final = (mask_t*swap_t + (1-mask_t)*full_frame).type(torch.uint8).squeeze().permute(1,2,0).cpu().detach().numpy()
+
+                cv2.imwrite('examples/images/vis1.png', final)
+
                 result_frames[i] = final
                 torch.cuda.empty_cache()
 
             except Exception as e:
+                print(Exception)
                 pass
                 
         out.write(result_frames[i])

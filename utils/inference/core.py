@@ -4,6 +4,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
+import pdb
 
 from .faceshifter_run import faceshifter_batch
 from .image_processing import crop_face, normalize_and_torch, normalize_and_torch_batch, add_sticker
@@ -37,11 +38,11 @@ def model_inference_sticker(full_frames: List[np.ndarray],
                     crop_size=224,
                     BS=60,
                     half=True,
+                    mode='glasses',
                     handler=None):
     """
     Adding stickers to original images
     """
-    print('???????')
     # Get Arcface embeddings of target image
     target_norm = normalize_and_torch_batch(np.array(target))
     target_embeds = netArc(F.interpolate(target_norm, scale_factor=0.5, mode='bilinear', align_corners=True))
@@ -56,7 +57,7 @@ def model_inference_sticker(full_frames: List[np.ndarray],
         resized_frs = np.array(resized_frs)
 
         # Add stickers to frames
-        output_frames = add_sticker(resized_frs, source[0], 'glasses', handler)
+        output_frames = add_sticker(resized_frs, source[0], mode, handler)
 
         # create list of final frames with transformed faces
         final_frames = []
@@ -64,7 +65,7 @@ def model_inference_sticker(full_frames: List[np.ndarray],
 
         for pres in tqdm(present):
             if pres == 1:
-                final_frames.append(output_frames[idx_fs])
+                final_frames.append(output_frames[idx_fs][0])
                 idx_fs += 1
             else:
                 final_frames.append([])
@@ -128,6 +129,7 @@ def model_inference(full_frames: List[np.ndarray],
 
         for pres in tqdm(present):
             if pres == 1:
+                pdb.set_trace()
                 final_frames.append(model_output[idx_fs])
                 idx_fs += 1
             else:
