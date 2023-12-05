@@ -41,7 +41,7 @@ def model_inference_sticker(full_frames: List[np.ndarray],
     """
     Adding stickers to original images
     """
-    print('!!!!!!!!!')
+    print('???????')
     # Get Arcface embeddings of target image
     target_norm = normalize_and_torch_batch(np.array(target))
     target_embeds = netArc(F.interpolate(target_norm, scale_factor=0.5, mode='bilinear', align_corners=True))
