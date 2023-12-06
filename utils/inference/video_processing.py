@@ -189,6 +189,88 @@ def resize_frames(crop_frames: List[np.ndarray], new_size=(256, 256)) -> Tuple[L
     return resized_frs, present
 
 
+def get_final_video_all(final_frames: List[np.ndarray],
+                    crop_frames: List[np.ndarray],
+                    full_frames: np.ndarray,
+                    tfm_array: List[np.ndarray],
+                    OUT_VIDEO_NAME: str,
+                    fps: float,
+                    mode: str,
+                    handler) -> None:
+    """
+    Create final video from frames and add stickers
+    """
+    # out = cv2.VideoWriter(f"{OUT_VIDEO_NAME}", cv2.VideoWriter_fourcc(*'mp4v'), fps, (full_frames[0].shape[1], full_frames[0].shape[0]))
+    size = (full_frames[0].shape[0], full_frames[0].shape[1])
+    params = [None for i in range(len(crop_frames))]
+    result_frames = full_frames.copy()
+    
+    print('start getting final video')
+    print(len(full_frames), len(crop_frames))
+    for i in tqdm(range(len(full_frames))):
+        if i == len(full_frames):
+            break
+        for j in range(len(crop_frames)): # length of target embedding
+            try:
+                swap = cv2.resize(final_frames[j][i][:, :, :3], (224, 224))
+                cv2.imwrite('examples/images/vis2.png', swap)
+
+                if len(crop_frames[j][i]) == 0:
+                    params[j] = None
+                    continue
+                    
+                landmarks_face = handler.get_without_detection_without_transform(swap)
+                if params[j] == None:     
+                    landmarks_tgt = handler.get_without_detection_without_transform(crop_frames[j][i])
+                    mask_face, params[j] = face_mask_static(swap, landmarks_face, landmarks_tgt, params[j])
+                else:
+                    mask_face = face_mask_static(swap, landmarks_face, landmarks_tgt, params[j])    
+                        
+                mask_face = torch.from_numpy(mask_face).cuda().unsqueeze(0).unsqueeze(0).type(torch.float32)
+                swap = torch.from_numpy(swap).cuda().permute(2,0,1).unsqueeze(0).type(torch.float32)
+                full_frame = torch.from_numpy(result_frames[i]).cuda().permute(2,0,1).unsqueeze(0)
+                mat = torch.from_numpy(tfm_array[j][i]).cuda().unsqueeze(0).type(torch.float32)
+                
+                mat_rev = kornia.invert_affine_transform(mat)
+                swap_t = kornia.warp_affine(swap, mat_rev, size)
+                mask_face_t = kornia.warp_affine(mask_face, mat_rev, size)
+                final = (mask_face_t*swap_t + (1-mask_face_t)*full_frame)
+                
+                
+                landmarks_sticker = handler.get_without_detection_without_transform(crop_frames[j][i])
+                mask_sticker = get_mask_sticker(crop_frames[j][i], landmarks_sticker, mode)
+                mask_sticker = torch.from_numpy(mask_sticker).cuda().unsqueeze(0).unsqueeze(0).type(torch.float32)
+
+                cv2.imwrite('examples/images/vis3.png', swap_t.squeeze().permute(1,2,0).cpu().detach().numpy())
+                mask_sticker_t = kornia.warp_affine(mask_sticker, mat_rev, size)
+                cv2.imwrite('examples/images/vis4.png', (mask_sticker_t*swap_t).squeeze().permute(1,2,0).cpu().detach().numpy())
+                final = (mask_sticker_t*swap_t + (1-mask_sticker_t)*final).type(torch.uint8).squeeze().permute(1,2,0).cpu().detach().numpy()
+
+                cv2.imwrite('examples/images/vis1.png', final)
+
+                result_frames[i] = final
+                torch.cuda.empty_cache()
+
+            except Exception as e:
+                print(Exception)
+                pass
+                
+    #     out.write(result_frames[i])
+
+    # out.release()
+    return result_frames
+  
+
+def generate_video(full_frames: np.ndarray,
+                    OUT_VIDEO_NAME: str,
+                    fps: float) -> None:
+    out = cv2.VideoWriter(f"{OUT_VIDEO_NAME}", cv2.VideoWriter_fourcc(*'mp4v'), fps, (full_frames[0].shape[1], full_frames[0].shape[0]))
+    for i in tqdm(range(len(full_frames))):
+      out.write(full_frames[i])
+    out.release()
+
+
+
 def get_final_video_sticker(final_frames: List[np.ndarray],
                     crop_frames: List[np.ndarray],
                     full_frames: np.ndarray,

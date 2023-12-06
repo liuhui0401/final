@@ -56,70 +56,77 @@ def add_sticker(crop_frames: List[np.ndarray],
     Adding stickers to crop frames
     """
     output = [[] for i in range(len(crop_frames))]
+    output_all = []
     for i in range(len(crop_frames)):
-        landmarks = handler.get_without_detection_without_transform(crop_frames[i])
-        # Get special region according to 106 keypoints
-        # Get masks for stickers
-        source_gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
-        _, source_mask = cv2.threshold(source_gray, 200, 255, cv2.THRESH_BINARY)
-        source_mask = cv2.bitwise_not(source_mask)
+        try:
+          landmarks = handler.get_without_detection_without_transform(crop_frames[i])
+          # Get special region according to 106 keypoints
+          # Get masks for stickers
+          source_gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
+          _, source_mask = cv2.threshold(source_gray, 200, 255, cv2.THRESH_BINARY)
+          source_mask = cv2.bitwise_not(source_mask)
 
-        # Get stickers
-        source_img = np.zeros((source.shape[0], source.shape[1], 4), dtype=np.uint8)
-        source_img[:, :, 0:3][source_mask > 0] = source[source_mask > 0]
-        source_img[:, :, 3][source_mask > 0] = 255
+          # Get stickers
+          source_img = np.zeros((source.shape[0], source.shape[1], 4), dtype=np.uint8)
+          source_img[:, :, 0:3][source_mask > 0] = source[source_mask > 0]
+          source_img[:, :, 3][source_mask > 0] = 255
 
-        # Get rectangle containing stickers
-        nonzero_pixels = cv2.findNonZero(source_mask)
-        source_x, source_y, source_w, source_h = cv2.boundingRect(nonzero_pixels)
-        source_mask_center_x = source_x + source_w // 2
-        source_mask_center_y = source_y + source_h // 2
+          # Get rectangle containing stickers
+          nonzero_pixels = cv2.findNonZero(source_mask)
+          source_x, source_y, source_w, source_h = cv2.boundingRect(nonzero_pixels)
+          source_mask_center_x = source_x + source_w // 2
+          source_mask_center_y = source_y + source_h // 2
 
-        # Get rectangle in frame
-        frame_x, frame_y, frame_w, frame_h = get_region(landmarks, mode)
-        frame_center_x, frame_center_y = int(frame_x + frame_w / 2), int(frame_y + frame_h / 2)
-        vis_img = crop_frames[i].copy()
-        cv2.rectangle(vis_img, (frame_x, frame_y), (frame_x + frame_w, frame_y + frame_h), (0,255,0), 2)
-        cv2.imwrite('examples/images/vis5.png', vis_img)
+          # Get rectangle in frame
+          frame_x, frame_y, frame_w, frame_h = get_region(landmarks, mode)
+          frame_center_x, frame_center_y = int(frame_x + frame_w / 2), int(frame_y + frame_h / 2)
+          vis_img = crop_frames[i].copy()
+          cv2.rectangle(vis_img, (frame_x, frame_y), (frame_x + frame_w, frame_y + frame_h), (0,255,0), 2)
+          cv2.imwrite('examples/images/vis5.png', vis_img)
 
-        # Transform sticker to frame
-        source_mask_region = source_mask[source_y: source_y+source_h, source_x: source_x + source_w]
-        source_img_region = source_img[source_y: source_y+source_h, source_x: source_x + source_w]
-        if frame_w % 2 != 0:
-            frame_w += 1
-        if frame_h % 2 != 0:
-            frame_h += 1
-        resized_source_mask = cv2.resize(source_mask_region, (frame_w, frame_h))
-        resized_source_region = cv2.resize(source_img_region, (frame_w, frame_h))
+          # Transform sticker to frame
+          source_mask_region = source_mask[source_y: source_y+source_h, source_x: source_x + source_w]
+          source_img_region = source_img[source_y: source_y+source_h, source_x: source_x + source_w]
+          if frame_w % 2 != 0:
+              frame_w += 1
+          if frame_h % 2 != 0:
+              frame_h += 1
+          resized_source_mask = cv2.resize(source_mask_region, (frame_w, frame_h))
+          resized_source_region = cv2.resize(source_img_region, (frame_w, frame_h))
 
-        # Adding transformed sticker to frame
-        resized_source_mask_center_x, resized_source_mask_center_y = frame_w // 2, frame_h // 2
-        x_offset, y_offset = source_mask_center_x - resized_source_mask_center_x, source_mask_center_y - resized_source_mask_center_y
-        resized_source_img = np.ones_like(source_img) * 255
-        resized_source_img[source_mask_center_y-resized_source_mask_center_y: source_mask_center_y+resized_source_mask_center_y, source_mask_center_x-resized_source_mask_center_x: source_mask_center_x+resized_source_mask_center_x][resized_source_mask > 0] \
-            = resized_source_region[resized_source_mask > 0]
-        # cv2.imwrite('examples/images/vis.png', resized_source_img)
+          # Adding transformed sticker to frame
+          resized_source_mask_center_x, resized_source_mask_center_y = frame_w // 2, frame_h // 2
+          x_offset, y_offset = source_mask_center_x - resized_source_mask_center_x, source_mask_center_y - resized_source_mask_center_y
+          resized_source_img = np.ones_like(source_img) * 255
+          resized_source_img[source_mask_center_y-resized_source_mask_center_y: source_mask_center_y+resized_source_mask_center_y, source_mask_center_x-resized_source_mask_center_x: source_mask_center_x+resized_source_mask_center_x][resized_source_mask > 0] \
+              = resized_source_region[resized_source_mask > 0]
+          # cv2.imwrite('examples/images/vis.png', resized_source_img)
+          
+          resized_source_img_gray = cv2.cvtColor(resized_source_img, cv2.COLOR_BGR2GRAY)
+          _, resized_source_mask = cv2.threshold(resized_source_img_gray, 200, 255, cv2.THRESH_BINARY)
+          resized_source_mask = cv2.bitwise_not(resized_source_mask)
+
+          resized_nonzero_pixels = cv2.findNonZero(resized_source_mask)
+          resized_source_mask_x, resized_source_mask_y, resized_source_mask_w, resized_source_mask_h = cv2.boundingRect(resized_nonzero_pixels)
+          resized_source_mask_center_x, resized_source_mask_center_y = resized_source_mask_x + resized_source_mask_w // 2, resized_source_mask_y + resized_source_mask_h // 2
+          resized_x_offset, resized_y_offset = frame_center_x - resized_source_mask_center_x, frame_center_y - resized_source_mask_center_y
+          x_start, y_start = max(resized_x_offset, 0), max(resized_y_offset, 0)
+          x_end, y_end = min(resized_x_offset + resized_source_img.shape[1], crop_frames[i].shape[1]), min(resized_y_offset + resized_source_img.shape[0], crop_frames[i].shape[0])
+
+          # Get final
+          final_img = np.zeros((crop_frames[i].shape[0], crop_frames[i].shape[1], 4), dtype=np.uint8)
+          final_img[:, :, 0:3] = crop_frames[i]
+          final_img[:, :, 3] = 255
+          resized_source_mask_offset = resized_source_mask[y_start-resized_y_offset: y_end-resized_y_offset, x_start-resized_x_offset: x_end-resized_x_offset]
+          final_img[y_start: y_end, x_start: x_end][resized_source_mask_offset > 0] = resized_source_img[y_start-resized_y_offset: y_end-resized_y_offset, x_start-resized_x_offset: x_end-resized_x_offset][resized_source_mask_offset > 0]
+          output[i].append(final_img)
+          cv2.imwrite('examples/images/vis.png', final_img)
+          output_all.append(final_img)
         
-        resized_source_img_gray = cv2.cvtColor(resized_source_img, cv2.COLOR_BGR2GRAY)
-        _, resized_source_mask = cv2.threshold(resized_source_img_gray, 200, 255, cv2.THRESH_BINARY)
-        resized_source_mask = cv2.bitwise_not(resized_source_mask)
-
-        resized_nonzero_pixels = cv2.findNonZero(resized_source_mask)
-        resized_source_mask_x, resized_source_mask_y, resized_source_mask_w, resized_source_mask_h = cv2.boundingRect(resized_nonzero_pixels)
-        resized_source_mask_center_x, resized_source_mask_center_y = resized_source_mask_x + resized_source_mask_w // 2, resized_source_mask_y + resized_source_mask_h // 2
-        resized_x_offset, resized_y_offset = frame_center_x - resized_source_mask_center_x, frame_center_y - resized_source_mask_center_y
-        x_start, y_start = max(resized_x_offset, 0), max(resized_y_offset, 0)
-        x_end, y_end = min(resized_x_offset + resized_source_img.shape[1], crop_frames[i].shape[1]), min(resized_y_offset + resized_source_img.shape[0], crop_frames[i].shape[0])
-
-        # Get final
-        final_img = np.zeros((crop_frames[i].shape[0], crop_frames[i].shape[1], 4), dtype=np.uint8)
-        final_img[:, :, 0:3] = crop_frames[i]
-        final_img[:, :, 3] = 255
-        resized_source_mask_offset = resized_source_mask[y_start-resized_y_offset: y_end-resized_y_offset, x_start-resized_x_offset: x_end-resized_x_offset]
-        final_img[y_start: y_end, x_start: x_end][resized_source_mask_offset > 0] = resized_source_img[y_start-resized_y_offset: y_end-resized_y_offset, x_start-resized_x_offset: x_end-resized_x_offset][resized_source_mask_offset > 0]
-        output[i].append(final_img)
-        cv2.imwrite('examples/images/vis.png', final_img)
-    return output
+        except:
+          output[i].append([])
+          output_all.append([])
+    return output, output_all
 
 
 def get_final_image_sticker(final_frames: List[np.ndarray],
