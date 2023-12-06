@@ -25,17 +25,11 @@ def get_region(landmarks: np.ndarray, mode: str):
       # Get region according to 106 keypoints
       # left_points = landmarks[33:43]
       # right_points = landmarks[89:97]
-      left_points = np.concatenate(([landmarks[1]],[landmarks[9]],[landmarks[10]], [landmarks[43]], [landmarks[48]]),axis=0)
-      right_points = np.concatenate(([landmarks[17]],[landmarks[25]],[landmarks[26]], [landmarks[101]], [landmarks[105]]),axis=0)
+      left_points = landmarks[1: 11]
+      right_points = landmarks[17: 27]
     elif mode == 'face':
       left_points = landmarks[10: 16]
       right_points = landmarks[26: 32]
-    elif mode == 'forehead':
-      left_points = landmarks[48: 52]
-      right_points = landmarks[102: 106]
-    elif mode == 'mask':
-      left_points = np.concatenate((landmarks[10:17], landmarks[2:7]), axis=0)
-      right_points = np.concatenate((landmarks[26:33], landmarks[18:23]), axis=0)
     
     x1_left = int(min(left_points, key=lambda x: x[0])[0])
     x2_left = int(max(left_points, key=lambda x: x[0])[0])
@@ -51,34 +45,20 @@ def get_region(landmarks: np.ndarray, mode: str):
     convexhull = cv2.convexHull(region)
     x, y, w, h = cv2.boundingRect(convexhull)
 
+    # Get glasses region rectangle
+    center_x = x + w / 2
+    center_y = y + h / 2
+
     if mode == 'glasses':
       # scale_factor_x = 1.5
       # scale_factor_y = 5
-      # Get glasses region rectangle
-      center_x = x + w / 2
-      center_y = y + h / 2
-      scale_factor_x = 1
-      scale_factor_y = 1.2
+      scale_factor_x = 0.8
+      scale_factor_y = 0.5
       new_x = int(center_x - (w * scale_factor_x) / 2)
       new_y = int(center_y - (h * scale_factor_y) / 2)
       new_w = int(w * scale_factor_x)
       new_h = int(h * scale_factor_y)
     elif mode == 'face':
-      center_x = x + w / 2
-      center_y = y + h / 2
-      new_x, new_y, new_w, new_h = x, y, w, h
-    elif mode == 'forehead':
-      center_x = x + w / 2
-      center_y = y + h / 2 - 30
-      scale_factor_x = 1.5
-      scale_factor_y = 4
-      new_x = int(center_x - (w * scale_factor_x) / 2)
-      new_y = int(center_y - (h * scale_factor_y) / 2)
-      new_w = int(w * scale_factor_x)
-      new_h = int(h * scale_factor_y)
-    elif mode == 'mask':
-      center_x = x + w / 2
-      center_y = y + h / 2
       new_x, new_y, new_w, new_h = x, y, w, h
     
     return new_x, new_y, new_w, new_h
