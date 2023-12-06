@@ -8,6 +8,7 @@ import cv2
 from .masks import face_mask_static, get_mask_sticker, get_region
 from matplotlib import pyplot as plt
 from insightface.utils import face_align
+import pdb
 
 
 def crop_face(image_full: np.ndarray, app: Callable, crop_size: int) -> np.ndarray:

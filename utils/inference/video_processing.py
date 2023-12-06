@@ -152,6 +152,7 @@ def crop_frames_and_get_transforms(full_frames: List[np.ndarray],
                 kps_array[0].append(kps[0])     
             
         except TypeError:
+            print('...')
             for q in range (len(target_embeds)):                
                 kps_array[0].append([])
         
@@ -235,7 +236,7 @@ def get_final_video_all(final_frames: List[np.ndarray],
                 swap_t = kornia.warp_affine(swap, mat_rev, size)
                 mask_face_t = kornia.warp_affine(mask_face, mat_rev, size)
                 final = (mask_face_t*swap_t + (1-mask_face_t)*full_frame)
-                
+                cv2.imwrite('examples.images/vis6.png', final.type(torch.uint8).squeeze().permute(1,2,0).cpu().detach().numpy())
                 
                 landmarks_sticker = handler.get_without_detection_without_transform(crop_frames[j][i])
                 mask_sticker = get_mask_sticker(crop_frames[j][i], landmarks_sticker, mode)

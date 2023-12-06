@@ -23,8 +23,10 @@ def expand_eyebrows(lmrks, eyebrows_expand_mod=1.0):
 def get_region(landmarks: np.ndarray, mode: str):
     if mode == 'glasses':
       # Get region according to 106 keypoints
-      left_points = landmarks[33:43]
-      right_points = landmarks[89:97]
+      # left_points = landmarks[33:43]
+      # right_points = landmarks[89:97]
+      left_points = landmarks[1: 11]
+      right_points = landmarks[17: 27]
     elif mode == 'face':
       left_points = landmarks[10: 16]
       right_points = landmarks[26: 32]
@@ -48,8 +50,10 @@ def get_region(landmarks: np.ndarray, mode: str):
     center_y = y + h / 2
 
     if mode == 'glasses':
-      scale_factor_x = 1.5
-      scale_factor_y = 5
+      # scale_factor_x = 1.5
+      # scale_factor_y = 5
+      scale_factor_x = 0.8
+      scale_factor_y = 1
       new_x = int(center_x - (w * scale_factor_x) / 2)
       new_y = int(center_y - (h * scale_factor_y) / 2)
       new_w = int(w * scale_factor_x)
