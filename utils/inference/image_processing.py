@@ -61,6 +61,21 @@ def add_sticker(crop_frames: List[np.ndarray],
     for i in range(len(crop_frames)):
         try:
           landmarks = handler.get_without_detection_without_transform(crop_frames[i])
+          if mode == 'mouth_open':
+            if landmarks[53][1] - landmarks[71][1] < 22:
+              output[i].append(crop_frames[i])
+              output_all.append(crop_frames[i])
+              continue
+          elif mode == 'left_eye':
+            if landmarks[33][1] - landmarks[40][1] > 3:
+              output[i].append(crop_frames[i])
+              output_all.append(crop_frames[i])
+              continue
+          elif mode == 'right_eye':
+            if landmarks[87][1] - landmarks[94][1] > 3:
+              output[i].append(crop_frames[i])
+              output_all.append(crop_frames[i])
+              continue
           # Get special region according to 106 keypoints
           # Get masks for stickers
           source_gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
