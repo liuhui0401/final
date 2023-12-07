@@ -133,7 +133,7 @@ def get_region(landmarks: np.ndarray, mode: str):
       center_x = x + w / 2
       center_y = y + h / 2
       scale_factor_x = 1.2
-      scale_factor_y = 2
+      scale_factor_y = 5
       new_x = int(center_x - (w * scale_factor_x) / 2)
       new_y = int(center_y - (h * scale_factor_y) / 2)
       new_w = int(w * scale_factor_x)

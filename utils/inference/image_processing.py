@@ -67,12 +67,12 @@ def add_sticker(crop_frames: List[np.ndarray],
               output_all.append(crop_frames[i])
               continue
           elif mode == 'left_eye':
-            if landmarks[33][1] - landmarks[40][1] > 3:
+            if landmarks[33][1] - landmarks[40][1] > 5:
               output[i].append(crop_frames[i])
               output_all.append(crop_frames[i])
               continue
           elif mode == 'right_eye':
-            if landmarks[87][1] - landmarks[94][1] > 3:
+            if landmarks[87][1] - landmarks[94][1] > 5:
               output[i].append(crop_frames[i])
               output_all.append(crop_frames[i])
               continue
