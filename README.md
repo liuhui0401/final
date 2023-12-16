@@ -9,9 +9,10 @@
 </p>
 
 ##  Face swap and adding stickers for videos.
+![Example Image](https://images.app.goo.gl/QhoXpA6rBbpzKNPU6)
 <p align="left">
   <a href="https://drive.google.com/file/d/12VmwK59mcqcAxKo6fY0A14q-PNeHQ_7N/view?usp=sharing">
-  <img src="https://images.app.goo.gl/ksuj3gnLXhWpV9dy7"/>
+  <img src="https://colab.research.google.com/assets/colab-badge.svg"/>
   </a>
 </p>
 
