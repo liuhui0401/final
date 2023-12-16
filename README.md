@@ -9,7 +9,7 @@
 </p>
 
 ##  Face swap and adding stickers for videos.
-![Example Image](https://images.app.goo.gl/QhoXpA6rBbpzKNPU6)
+[Example Image](https://drive.google.com/file/d/1Kd9UltoG0AVNOnURoAE111dvDVu_6S6A/view?usp=sharing)
 
 ##  Real-time face swap.
 <p align="left">
